@@ -32,3 +32,5 @@ export async function decodeToken(req, res, next) {
     return res.status(401).json({ msg: "Unauthorized" });
   }
 }
+
+export default decodeToken;

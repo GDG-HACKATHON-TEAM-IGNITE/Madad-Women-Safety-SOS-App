@@ -47,5 +47,5 @@ const userCreate = async (req, res) => {
     console.error(err);
     res.status(500).json({ success: false });
   }
-}
+};
 export default userCreate;
