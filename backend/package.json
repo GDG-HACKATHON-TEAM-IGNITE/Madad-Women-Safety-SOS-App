@@ -13,10 +13,12 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
+		"@google/generative-ai": "^0.24.1",
 		"cors": "^2.8.5",
 		"dotenv": "^17.2.3",
 		"express": "^4.17.1",
 		"fcm-node": "^1.6.1",
+		"express-rate-limit": "^8.2.1",
 		"firebase-admin": "^9.7.0",
 		"jsonwebtoken": "^9.0.3",
 		"mongoose": "^9.0.2",
