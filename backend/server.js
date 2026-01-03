@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { decodeToken } from './middleware/auth.js';
-import  user from './controllers/user.js';
+import { userCreate, addFriends } from './controllers/user.js';
 import connectDB from './config/db.js';
 import { Server } from "socket.io";
 import http from "http";
@@ -10,12 +10,14 @@ import initSockets from './sockets/index.js';
 const app = express();
 app.use(express.json());
 app.use(cors());
+// import { sendPoliceOtp, verifyPoliceOtp } from "./controllers/station.js";
+import stationRoutes from "./routes/station.routes.js";
 
-
-
-app.post('/api/user', decodeToken, user);
+app.post('/api/user', decodeToken, userCreate);
 //routes
 
+// app.use("/api/user", userRoutes);
+// app.use("/api/station", stationRoutes);
 
 
 
@@ -54,5 +56,6 @@ server.listen(port, () => {
 	console.log(error)
 }
 
-
+// app.post("/api/police/send-otp", sendPoliceOtp);
+// app.post("/api/police/login", verifyPoliceOtp);
 

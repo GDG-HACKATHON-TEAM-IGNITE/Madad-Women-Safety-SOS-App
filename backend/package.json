@@ -5,8 +5,8 @@
 	"main": "server.js",
 	"type": "module",
 	"scripts": {
-		"dev": "nodemon src/server.js",
-		"start": "node src/server.js",
+		"dev": "nodemon server.js",
+		"start": "node server.js",
 		"seed:police": "node seeder/policeStationSeeder.js"
 	},
 	"keywords": [],
@@ -15,7 +15,7 @@
 	"dependencies": {
 		"cors": "^2.8.5",
 		"dotenv": "^17.2.3",
-		"express": "^4.17.1",
+		"express": "^4.22.1",
 		"fcm-node": "^1.6.1",
 		"firebase-admin": "^9.7.0",
 		"jsonwebtoken": "^9.0.3",
