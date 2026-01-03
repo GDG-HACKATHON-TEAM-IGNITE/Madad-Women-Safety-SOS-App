@@ -1,11 +1,10 @@
 import User from "../models/user.model.js";
 import FcmToken from "../models/fcmToken.model.js";
 
-
 export const userCreate = async (req, res) => {
   try {
     const { uid, email, name, picture } = req.user;
-    const { fcmToken , phone} = req.body; //solved wrong data
+    const { fcmToken, phone } = req.body; //solved wrong data
 
     // Find or create user
     let user = await User.findOne({ uid });
@@ -48,10 +47,7 @@ export const userCreate = async (req, res) => {
     console.error(err);
     res.status(500).json({ success: false });
   }
-}
- 
-
-
+};
 
 export const addFriends = async (req, res) => {
   try {
