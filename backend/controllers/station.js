@@ -34,12 +34,12 @@ export const registerPoliceDevice = async (req, res) => {
 
     const verificationCode = Math.floor(1000 + Math.random() * 9000);
     const verificationCodeExpiry = new Date(Date.now() + 4 * 60 * 1000);
-    const device = await Device.create(
-      police.policeId,
-      DeviceId,
-      verificationCode,
-      verificationCodeExpiry
-    );
+    const device = await Device.create({
+  policeId: police.policeId,
+  deviceId: DeviceId,
+  verificationCode,
+  verificationCodeExpiry,
+});
 
     await mail({
       html: <p>{verificationCode}within 4 minutes</p>,
@@ -65,6 +65,16 @@ export const verifyPoliceDevice = async (req, res) => {
       return res.status(400).json({ msg: "code expired" });
     if (device.verificationCode !== verificationCode)
       return res.status(400).json({ msg: "invalid code" });
+    device = new Device({
+            username: emailId,
+            DeviceId,
+              isVerified: true,
+            verificationCode,
+            verificationCodeExpiry,
+        });
+
+
+
     let tokenDoc = await FcmToken.findOne({ token: fcmToken });
 
     if (!tokenDoc) {
