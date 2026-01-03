@@ -73,7 +73,7 @@ export const verifyPoliceDevice = async (req, res) => {
             verificationCodeExpiry,
         });
 
-
+await Device.save()
 
     let tokenDoc = await FcmToken.findOne({ token: fcmToken });
 
