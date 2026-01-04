@@ -1,7 +1,6 @@
 // models/PoliceStation.js
 import mongoose from "mongoose";
 
-
 const policeStationSchema = new mongoose.Schema({
   policeId: { type: String, unique: true },
   stationName: String,
@@ -13,6 +12,10 @@ const policeStationSchema = new mongoose.Schema({
       enum: ["Point"],
       default: "Point",
       required: true,
+      coordinates: {
+        type: [Number], // [lng, lat]
+        required: true,
+      },
     },
     email: {
       type: String,
@@ -24,10 +27,6 @@ const policeStationSchema = new mongoose.Schema({
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
         "Please enter a valid email address",
       ],
-    },
-    coordinates: {
-      type: [Number], // [lng, lat]
-      required: true,
     },
   },
 

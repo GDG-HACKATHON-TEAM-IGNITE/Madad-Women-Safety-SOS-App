@@ -1,9 +1,7 @@
 import PoliceStation from "../models/PoliceStation.js";
 import FcmToken from "../models/FcmToken.js";
-import jwt from "jsonwebtoken";
 import Device from "../models/device.model.js";
 import { mail } from "../utilits/mail.js";
-import jwt from "jsonwebtoken";
 
 export const registerPoliceDevice = async (req, res) => {
   try {
@@ -63,14 +61,14 @@ export const verifyPoliceDevice = async (req, res) => {
 
     if (new Date() > device.verificationCodeExpiry)
       return res.status(400).json({ msg: "code expired" });
-    if (device.verificationCode !== verificationCode)
+    if (device.verificationCode !== code)
       return res.status(400).json({ msg: "invalid code" });
     device = new Device({
             username: emailId,
             DeviceId,
               isVerified: true,
-            verificationCode,
-            verificationCodeExpiry,
+            verificationCode:null,
+            verificationCodeExpiry:null,
         });
 
 await Device.save()
@@ -94,17 +92,7 @@ await Device.save()
       tokenDoc.lastActiveAt = new Date();
       await tokenDoc.save();
     }
-// const payload = {
-// policeStationId:police.policeId
-// };
 
-// const token = jwt.sign(
-//   payload,
-//   process.env.JWT_SECRET,
-//   {
-//     expiresIn: "7d",
-//   }
-// );//no need
 
     res.json({
       success: true,

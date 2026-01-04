@@ -1,5 +1,6 @@
 import User from "../models/user.model.js";
 import FcmToken from "../models/fcmToken.model.js";
+import { Report } from "../models/report.model.js";
 
 export const userCreate = async (req, res) => {
   try {
@@ -51,7 +52,7 @@ export const userCreate = async (req, res) => {
 
 export const addFriends = async (req, res) => {
   try {
-    const { uid } = req.params;
+    const { uid } = req.user;
     const { friends } = req.body;
 
     if (!Array.isArray(friends) || friends.length === 0) {
@@ -96,5 +97,68 @@ export const addFriends = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ msg: error.message });
+  }
+};
+export const report = async (req, res) => {
+  if (req.user.uid) {
+    const { whatHappened, firstName, lastName, riskVal, lng, lat, phone } =
+      req.body;
+    if (whatHappened && lng && lat && riskVal) {
+      const CapitalizeRisk = (riskVal) => {
+        return riskVal[0].toUpperCase() + riskVal.slice(1).toLowerCase();
+      };
+      let Risk;
+      if (CapitalizeRisk === "Minor concern") {
+        Risk = 1;
+      } else if (CapitalizeRisk === "Moderate risk") {
+        Risk = 2;
+      } else if (CapitalizeRisk === "Immediate danger") {
+        Risk = 3;
+      }
+
+      await Report.create({
+        location: { coodinates: [lng, lat] },
+        risk: Risk,
+        firstName,
+        lastName,
+        whatHappened,
+      });
+    }
+  }
+};
+
+export const scoreCalculator = async (req, res) => {
+  if (req.user.uid) {
+    const { lng, lat } = res.quary;
+    if (lng && lat) {
+      try {
+        const data = await Report.find(
+          {
+            location: {
+              $near: {
+                $geometry: {
+                  type: "Point",
+                  coordinates: [lng, lat],
+                },
+                $maxDistance: 5000,
+              },
+            },
+          },
+          { whatHappened: 1, risk: 1 }
+        );
+
+        const totalCases = data.length;
+        const totalRating = data.reduce((pre, curr) => pre + curr.risk, 0);
+
+        const safeScoreintensity = totalCases * totalRating;
+        if (safeScoreintensity < 1) {
+          safeScoreintensity = 1;
+        }
+        safescore = (1 / safeScoreintensity) * 100;
+        return res.json({ safescore, data });
+      } catch (error) {
+        return res.json({ msg: error });
+      }
+    }
   }
 };

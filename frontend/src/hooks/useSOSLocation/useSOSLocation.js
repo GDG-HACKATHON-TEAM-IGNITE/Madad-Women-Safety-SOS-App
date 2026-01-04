@@ -3,7 +3,7 @@ import { socket } from "../../sockets/sockets.jsx";
 
 export const useSOSLocation = () => {
   const watchIdRef = useRef(null);
-
+//userid=mongoose id fix now its uid
   const startSOS = () => {
     socket.emit("register-user", { userId });
     if (!navigator.geolocation) {

@@ -6,21 +6,23 @@ import { decodeToken } from "./middleware/auth.js"; //require service.json , com
 import user from "./controllers/user.js";
 import connectDB from "./config/db.js";
 import { Server } from "socket.io";
+import userRoutes from './routes/user.routes.js'
 import http from "http";
 const port = process.env.PORT || 5000;
 import initSockets from "./sockets/index.js";
-//
+
 import fetchmessage, { limiter } from "./controllers/chat.js";
 //
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-app.post("/api/user", decodeToken, user); //require service.json comment out to test chatapi
+app.use("/api",userRoutes); //require service.json comment out to test chatapi
 //routes
 
 //chat bot implementation
 app.post("/api/chat", limiter, fetchmessage);
+app
 
 const server = http.createServer(app);
 const io = new Server(server, {
