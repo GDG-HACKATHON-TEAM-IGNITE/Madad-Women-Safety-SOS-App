@@ -11,6 +11,9 @@ import { getToken } from "firebase/messaging";
 import SOSButton from "./components/SosButton";
 import PoliceLiveDashboard from "./pages/Policemap";
 import HelpMate from "./pages/helpMate";
+import Login from "./pages/policeLogin";
+import Dashboard from "./pages/Dashboard";
+
 
 function App() {
   if ("serviceWorker" in navigator) {
