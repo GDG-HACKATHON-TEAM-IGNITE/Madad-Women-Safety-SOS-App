@@ -51,16 +51,16 @@ const Sign = () => {
 
 const { isAuth } = useAuth();
 
-// useEffect(() => {
-//     if (isAuth) navigate("/"); // redirect if logged in
-//   }, [isAuth,navigate]);
+useEffect(() => {
+    if (isAuth) navigate("/home"); // redirect if logged in
+  }, [isAuth,navigate]);
 
 const handleGoogleLogin = async () => {
   try {
     await googleLogin();   // opens Google popup
     // After login, onAuthStateChanged in AuthContext fires
     // Then isAuth becomes true automatically
-    navigate("/");         // redirect to home/dashboard
+    navigate("/home");         // redirect to home/dashboard
   } catch (err) {
     console.error(err);
   }
@@ -75,18 +75,6 @@ const handleGoogleLogin = async () => {
     >
       <div className="flex flex-col md:flex-row w-full h-screen">
 
-        <button
-        onClick={() => navigate("/")}
-        className="
-          absolute top-6 left-6 z-20
-          w-10 h-10 rounded-full
-          bg-white shadow
-          flex items-center justify-center
-          hover:opacity-80
-        "
-      >
-        <i className="ri-arrow-left-line text-xl"></i>
-      </button>
 
         {/* LEFT IMAGE */}
         <div className="w-full md:w-1/2">

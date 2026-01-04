@@ -1,164 +1,237 @@
 import React, { useEffect, useState } from "react";
+import { z } from "zod";
+import { auth } from "../config/firebase-config";
+import { onAuthStateChanged } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
+
+/* ================= ZOD ================= */
+
+const profileSchema = z.object({
+  fullName: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Enter a valid email"),
+});
+
+const uidSchema = z
+  .string()
+  .min(4, "UID too short")
+  .regex(/^[a-zA-Z0-9_-]+$/, "Invalid UID format");
+
+/* ================= COMPONENT ================= */
 
 const Settings = () => {
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const [profile, setProfile] = useState({
+    uid: "",
     fullName: "",
     email: "",
   });
 
-  const [phones, setPhones] = useState([]);
-  const [newPhone, setNewPhone] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  /* 🔹 Simulated backend fetch */
-  const fetchProfile = async () => {
-    // replace with real API later
-    return new Promise((resolve) =>
-      setTimeout(() => {
-        resolve({
-          fullName: "Aegis",
-          email: "user@aegisher.com",
-          phones: [
-            // { id: 1, number: "+91 98765 43210" },
-            // { id: 2, number: "+91 90123 45678" },
-          ],
-        });
-      }, 800)
-    );
-  };
+  const [contacts, setContacts] = useState([]);
+  const [newUID, setNewUID] = useState("");
 
-  /* Load backend data */
+  /* ================= AUTH + PROFILE ================= */
+
   useEffect(() => {
-    fetchProfile().then((data) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        navigate("/signin");
+        return;
+      }
+
       setProfile({
-        fullName: data.fullName,
-        email: data.email,
+        uid: user.uid,                // ✅ FIREBASE UID
+        fullName: user.displayName || "",
+        email: user.email || "",
       });
-      setPhones(data.phones);
-      setLoading(false);
     });
-  }, []);
 
-  /* Persist phones locally */
-  useEffect(() => {
-    localStorage.setItem("settingsPhones", JSON.stringify(phones));
-  }, [phones]);
+    return () => unsubscribe();
+  }, [navigate]);
 
-  const addPhone = () => {
-    if (!newPhone.trim()) return;
-    setPhones([...phones, { id: Date.now(), number: newPhone }]);
-    setNewPhone("");
+  /* ================= PROFILE SAVE ================= */
+
+  const saveProfile = async () => {
+    setError("");
+
+    const validation = profileSchema.safeParse({
+      fullName: profile.fullName,
+      email: profile.email,
+    });
+
+    if (!validation.success) {
+      setError(validation.error.errors[0].message);
+      return;
+    }
+
+    setSaving(true);
+
+    await fetch("http://localhost:5000/api/profile/update", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${profile.uid}`,
+      },
+      body: JSON.stringify({
+        fullName: profile.fullName,
+        email: profile.email,
+      }),
+    });
+
+    setSaving(false);
+    setEditing(false);
   };
 
-  const deletePhone = (id) => {
-    setPhones(phones.filter((p) => p.id !== id));
+  /* ================= CONTACTS ================= */
+
+  const addUID = () => {
+    setError("");
+
+    const valid = uidSchema.safeParse(newUID);
+    if (!valid.success) {
+      setError(valid.error.errors[0].message);
+      return;
+    }
+
+    if (contacts.includes(newUID)) {
+      setError("UID already added");
+      return;
+    }
+
+    setContacts([...contacts, newUID]);
+    setNewUID("");
   };
 
-  const updatePhone = (id, value) => {
-    setPhones(
-      phones.map((p) => (p.id === id ? { ...p, number: value } : p))
-    );
+  const removeUID = (uid) => {
+    setContacts(contacts.filter((u) => u !== uid));
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-400">Loading profile...</p>
-      </div>
-    );
-  }
+  const saveContacts = async () => {
+    await fetch("http://localhost:5000/api/emergency-contacts", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${profile.uid}`,
+      },
+      body: JSON.stringify({ contacts }),
+    });
+  };
+
+  /* ================= UI ================= */
 
   return (
-    <div className="min-h-screen bg-[#f6f9fc] flex justify-center px-4 py-10">
-      <div className="w-full max-w-5xl bg-white shadow-sm rounded-3xl p-6 sm:p-10">
+    <div className="min-h-screen bg-linear-to-br from-[#f4f8fc] to-[#eef3f9] px-4 py-10 flex justify-center">
+      <div className="w-full max-w-4xl bg-white rounded-3xl shadow-sm p-6 sm:p-10">
 
-        {/* HEADER */}
-        <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-center lg:text-left">
-            Settings <span className="text-[#a7c7e7]">Profile</span>
-          </h1>
-          <p className="text-gray-500 text-sm mt-2 text-center lg:text-left">
-            Manage your personal information and emergency contacts.
-          </p>
-        </div>
+        <h1 className="text-3xl font-bold mb-8">
+          Settings <span className="text-[#a7c7e7]">Profile</span>
+        </h1>
 
-        {/* PROFILE */}
-        <div className="mb-10">
-          <h2 className="text-[#a7c7e7] font-semibold mb-4">
-            Personal Information
-          </h2>
+        {/* UID */}
+        <label className="text-xs text-gray-500">Your UID</label>
+        <input
+          value={profile.uid}
+          disabled
+          className="w-full mb-5 px-4 py-3 rounded-xl bg-[#f2f6fb] cursor-not-allowed"
+        />
 
-          <input
-            value={profile.fullName}
-            disabled
-            className="input w-full cursor-not-allowed bg-[#f2f6fb] px-3 py-3 rounded-xl mb-5"
-          />
+        {/* NAME */}
+        <label className="text-xs text-gray-500">Full Name</label>
+        <input
+          value={profile.fullName}
+          disabled={!editing}
+          onChange={(e) =>
+            setProfile({ ...profile, fullName: e.target.value })
+          }
+          className={`w-full mb-4 px-4 py-3 rounded-xl ${
+            editing
+              ? "border focus:ring-2 focus:ring-[#a7c7e7] outline-none"
+              : "bg-[#f2f6fb]"
+          }`}
+        />
 
-          <input
-            value={profile.email}
-            disabled
-            className="input w-full cursor-not-allowed bg-[#f2f6fb] px-3 py-3 rounded-xl"
-          />
+        {/* EMAIL */}
+        <label className="text-xs text-gray-500">Email</label>
+        <input
+          value={profile.email}
+          disabled={!editing}
+          onChange={(e) =>
+            setProfile({ ...profile, email: e.target.value })
+          }
+          className={`w-full mb-4 px-4 py-3 rounded-xl ${
+            editing
+              ? "border focus:ring-2 focus:ring-[#a7c7e7] outline-none"
+              : "bg-[#f2f6fb]"
+          }`}
+        />
 
-          <p className="text-xs text-gray-400 mt-2">
-            Name and email are managed securely by our system.
-          </p>
-        </div>
+        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
-        {/* PHONES */}
-        <div>
-          <h2 className="text-[#a7c7e7] font-semibold mb-4">
-            Phone Numbers
-          </h2>
-
-          <div className="space-y-3 mb-5">
-            {phones.map((phone) => (
-              <div
-                key={phone.id}
-                className="flex items-center gap-3 bg-[#f2f6fb] rounded-xl px-4 py-3"
-              >
-                <i className="ri-smartphone-line text-[#a7c7e7] text-xl" />
-
-                <input
-                  value={phone.number}
-                  onChange={(e) =>
-                    updatePhone(phone.id, e.target.value)
-                  }
-                  className="flex-1 bg-transparent outline-none text-gray-700"
-                />
-
-                <button
-                  onClick={() => deletePhone(phone.id)}
-                  className="text-gray-400 hover:text-[#a7c7e7] transition"
-                >
-                  <i className="ri-delete-bin-line text-lg" />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              value={newPhone}
-              onChange={(e) => setNewPhone(e.target.value)}
-              placeholder="Add new phone number"
-              className="input flex-1 bg-[#f2f6fb] px-3 py-3 rounded-xl focus:border-[#a7c7e7]"
-            />
+        {!editing ? (
+          <button
+            onClick={() => setEditing(true)}
+            className="px-6 py-3 rounded-xl bg-[#a7c7e7] text-white font-semibold"
+          >
+            Edit Profile
+          </button>
+        ) : (
+          <div className="flex gap-3">
             <button
-              onClick={addPhone}
-              className="px-6 py-3 rounded-xl bg-[#a7c7e7] text-white font-semibold hover:opacity-90 transition"
+              onClick={saveProfile}
+              disabled={saving}
+              className="flex-1 px-6 py-3 rounded-xl bg-[#a7c7e7] text-white font-semibold"
             >
-              Add Number
+              Save
+            </button>
+            <button
+              onClick={() => setEditing(false)}
+              className="flex-1 px-6 py-3 rounded-xl bg-gray-100"
+            >
+              Cancel
             </button>
           </div>
+        )}
 
-          <p className="text-xs text-gray-400 mt-4">
-            Your contact details are private and used only for emergency
-            purposes.
-          </p>
+        {/* CONTACTS */}
+        <h2 className="mt-10 mb-4 text-[#a7c7e7] font-semibold">
+          Emergency Contacts (UIDs)
+        </h2>
+
+        {contacts.map((uid) => (
+          <div
+            key={uid}
+            className="flex justify-between items-center bg-[#f2f6fb] px-4 py-3 rounded-xl mb-2"
+          >
+            <span className="font-mono text-sm">{uid}</span>
+            <button onClick={() => removeUID(uid)}>✕</button>
+          </div>
+        ))}
+
+        <div className="flex gap-3 mt-4">
+          <input
+            value={newUID}
+            onChange={(e) => setNewUID(e.target.value)}
+            placeholder="Enter user UID"
+            className="flex-1 px-4 py-3 rounded-xl bg-[#f2f6fb] focus:ring-2 focus:ring-[#a7c7e7] outline-none"
+          />
+          <button
+            onClick={addUID}
+            className="px-6 py-3 rounded-xl bg-[#a7c7e7] text-white font-semibold"
+          >
+            Add
+          </button>
         </div>
 
+        <button
+          onClick={saveContacts}
+          className="mt-6 px-6 py-3 rounded-xl bg-[#a7c7e7] text-white font-semibold"
+        >
+          Save Emergency Contacts
+        </button>
       </div>
     </div>
   );

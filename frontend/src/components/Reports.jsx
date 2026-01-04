@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 const Reports = () => {
   const [selectedIncident, setSelectedIncident] = useState(null);
@@ -12,6 +14,23 @@ const Reports = () => {
     description: "",
   });
 
+  const [location, setLocation] = useState({
+    lat: null,
+    lng: null,
+    address: "Fetching location...",
+  });
+
+  const [tempLocation, setTempLocation] = useState(null);
+
+  const [showMap, setShowMap] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [searchError, setSearchError] = useState("");
+
+  const mapRef = useRef(null);
+  const markerRef = useRef(null);
+
+  /* ================= DATA ================= */
+
   const incidentTypes = [
     { id: 1, title: "Harassment", description: "Verbal, Physical", icon: "ri-user-voice-line" },
     { id: 2, title: "Theft", description: "Robbery, Theft", icon: "ri-handbag-line" },
@@ -22,37 +41,154 @@ const Reports = () => {
   ];
 
   const riskLevels = [
-    { id: 1, label: "Low Risk", description: "Minor concern", icon: "🟢" },
-    { id: 2, label: "Medium Risk", description: "Moderate risk", icon: "🟡" },
-    { id: 3, label: "High Risk", description: "Immediate danger", icon: "🔴" },
+    { id: 1, description: "Minor concern", icon: "🟢" },
+    { id: 2, description: "Moderate risk", icon: "🟡" },
+    { id: 3, description: "Immediate danger", icon: "🔴" },
   ];
 
-  useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("unsafeReport"));
-    if (saved) {
-      setFormData(saved.formData);
-      setSelectedIncident(saved.selectedIncident);
-      setSelectedRisk(saved.selectedRisk);
+  /* ================= LOCATION ================= */
+
+  const reverseGeocode = async (lat, lng) => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+      );
+      const data = await res.json();
+      return data.display_name || "Unknown location";
+    } catch {
+      return "Unknown location";
     }
+  };
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        const address = await reverseGeocode(coords.latitude, coords.longitude);
+        setLocation({
+          lat: coords.latitude,
+          lng: coords.longitude,
+          address,
+        });
+      },
+      () => setLocation({ address: "Location permission denied" }),
+      { enableHighAccuracy: true }
+    );
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem(
-      "unsafeReport",
-      JSON.stringify({ formData, selectedIncident, selectedRisk })
-    );
-  }, [formData, selectedIncident, selectedRisk]);
 
-  const handleChange = (key, value) =>
-    setFormData({ ...formData, [key]: value });
+  /* ================= MAP MODAL ================= */
+
+  useEffect(() => {
+  if (!showMap || !location.lat) return;
+
+  setTempLocation(location);
+
+  mapRef.current = L.map("picker-map").setView(
+    [location.lat, location.lng],
+    15
+  );
+
+  L.tileLayer(
+    "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+  ).addTo(mapRef.current);
+
+  markerRef.current = L.marker([location.lat, location.lng], {
+    draggable: true,
+  }).addTo(mapRef.current);
+
+  mapRef.current.on("click", async (e) => {
+    const { lat, lng } = e.latlng;
+    markerRef.current.setLatLng([lat, lng]);
+    const address = await reverseGeocode(lat, lng);
+    setTempLocation({ lat, lng, address });
+  });
+
+  markerRef.current.on("dragend", async (e) => {
+    const { lat, lng } = e.target.getLatLng();
+    const address = await reverseGeocode(lat, lng);
+    setTempLocation({ lat, lng, address });
+  });
+
+  return () => {
+    mapRef.current.remove();
+    mapRef.current = null;
+  };
+}, [showMap]); // ✅ Only showMap
+
+
+  /* ================= MANUAL SEARCH ================= */
+
+  const searchPlace = async () => {
+    if (!searchText.trim()) return;
+
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${searchText}`
+      );
+      const data = await res.json();
+
+      if (!data.length) {
+        setSearchError("Place not found");
+        return;
+      }
+
+      const place = data[0];
+      const lat = parseFloat(place.lat);
+      const lng = parseFloat(place.lon);
+
+      setSearchError("");
+
+      markerRef.current.setLatLng([lat, lng]);
+      mapRef.current.setView([lat, lng], 15);
+
+      setTempLocation({
+        lat,
+        lng,
+        address: place.display_name,
+      });
+    } catch {
+      setSearchError("Search failed");
+    }
+  };
+
+  /* ================= SUBMIT ================= */
+
+  const handleSubmit = async () => {
+    if (!selectedIncident || !selectedRisk || !location.lat) {
+      alert("Please complete all required fields");
+      return;
+    }
+
+    await fetch("http://localhost:5000/api/reports", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...formData,
+        incidentType: selectedIncident,
+        riskLevel: selectedRisk,
+        location: {
+          type: "Point",
+          coordinates: [location.lng, location.lat],
+          address: location.address,
+        },
+      }),
+    });
+
+    alert("Report submitted successfully");
+  };
+
+  const handleChange = (k, v) =>
+    setFormData({ ...formData, [k]: v });
+
+  /* ================= UI ================= */
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-[#f4f8fc] to-[#eef3f9] px-6 py-12">
+    <>
+      <div className="min-h-screen bg-linear-to-br from-[#f4f8fc] to-[#eef3f9] px-6 py-12">
       <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12">
 
         {/* LEFT */}
         <div>
-          <h1 className="text-4xl lg:text-5xl text-center lg:text-left font-bold mb-4 mt-5 lg:mt-0">
+          <h1 className="text-4xl lg:text-5xl font-bold mb-4 text-center lg:text-left">
             Report Un<span className="text-[#A7C7E7]">safe Zone</span>
           </h1>
 
@@ -61,23 +197,21 @@ const Reports = () => {
             or suspicious.
           </p>
 
-          {/* Location Card */}
-          <div className="mb-8 p-4 rounded-2xl bg-[#a7c7e7] flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-[#a7c7e7] text-xl">
-                <i className="ri-map-pin-line" />
-              </div>
-              <div className="text-white">
-                <p className="text-xs opacity-80">REPORTING FROM</p>
-                <p className="font-semibold">New Delhi, India</p>
-              </div>
+          {/* LOCATION CARD */}
+          <div className="mb-8 p-4 rounded-2xl bg-[#a7c7e7] flex flex-col lg:flex-row justify-between items-center">
+            <div className="text-white">
+              <p className="text-xs opacity-80 text-center lg:text-left">REPORTING FROM</p>
+              <p className="font-semibold  text-center lg:text-left">{location.address}</p>
             </div>
-            <button className="bg-white text-[#a7c7e7] px-5 py-2 rounded-xl font-semibold">
+            <button
+              onClick={() => setShowMap(true)}
+              className="bg-white text-[#a7c7e7] px-5 py-2 rounded-xl font-semibold mt-1 lg:mt-0 w-full lg:w-auto"
+            >
               Edit
             </button>
           </div>
 
-          {/* Incident Types */}
+          {/* INCIDENT TYPES */}
           <p className="mb-4 text-sm text-gray-500">What happened?</p>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
             {incidentTypes.map((item) => (
@@ -168,13 +302,118 @@ const Reports = () => {
             Your information is private and will never be shared publicly.
           </p>
 
-          <button className="w-full py-3 rounded-xl bg-[#a7c7e7] text-white font-semibold hover:opacity-90 transition">
+          <button onClick={handleSubmit} className="w-full py-3 rounded-xl bg-[#a7c7e7] text-white font-semibold hover:opacity-90 transition">
             Submit Report
           </button>
         </div>
+
+      </div>
+
+{/* MAP MODAL */}
+{showMap && (
+  <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+
+    {/* CARD */}
+    <div
+      className="
+        bg-linear-to-br from-[#f4f8fc] to-[#eef3f9]
+        w-[85%] sm:w-[75%] lg:w-[70%]
+        h-[80vh]
+        rounded-3xl
+        shadow-2xl
+        flex flex-col
+        animate-slideUp
+        mt-15
+      "
+    >
+      {/* HEADER */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-400">
+        <h2 className="text-lg font-semibold">
+          Choose Location
+        </h2>
+
+        <button
+          onClick={() => setShowMap(false)}
+          className="w-9 h-9 flex items-center justify-center font-bold text-black rounded-full bg-gray-100 hover:bg-gray-200 transition"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* SEARCH */}
+      <div className="px-5 py-4">
+        <div className="flex flex-col lg:flex-row gap-3">
+          <input
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            placeholder="Search area or landmark"
+            className="
+              flex-1 px-4 py-3 rounded-xl
+              border border-gray-200
+              focus:outline-none focus:ring-2 focus:ring-[#a7c7e7]
+            "
+          />
+          <button
+            onClick={searchPlace}
+            className="
+              px-6 py-3 rounded-xl
+              bg-[#a7c7e7] text-white font-semibold
+              hover:opacity-90
+            "
+          >
+            Search
+          </button>
+        </div>
+
+        {searchError && (
+          <p className="text-[#a7c7e7] text-sm mt-2">{searchError}</p>
+        )}
+      </div>
+
+      {/* MAP */}
+      <div className="flex-1 px-4">
+        <div
+          id="picker-map"
+          className="w-full h-full rounded-2xl overflow-hidden"
+        />
+      </div>
+
+      {/* ACTION BAR */}
+      <div className="px-5 py-4 border-t border-gray-400 flex justify-between gap-3">
+        <button
+          onClick={() => setShowMap(false)}
+          className="
+            flex-1 py-3 rounded-xl
+            bg-gray-100 font-semibold
+          "
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={() => {
+            if (!tempLocation) return;
+            setLocation(tempLocation);
+            setShowMap(false);
+          }}
+          className="
+            flex-1 py-3 rounded-xl
+            bg-[#a7c7e7] text-white font-semibold
+            hover:opacity-90
+          "
+        >
+          Set Location
+        </button>
       </div>
     </div>
+  </div>
+)}
+
+
+    </div>
+    </>
   );
 };
 
 export default Reports;
+

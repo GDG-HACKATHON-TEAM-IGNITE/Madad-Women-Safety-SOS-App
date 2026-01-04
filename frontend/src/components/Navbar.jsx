@@ -7,9 +7,9 @@ const Navbar = () => {
   const [open, setOpen] = useState(false);
 
   const navLinks = [
-    { to: "/", label: "Home", icon: "ri-home-5-line" },
+    { to: "/home", label: "Home", icon: "ri-home-5-line" },
     { to: "/safescore", label: "Safety Score", icon: "ri-shield-line" },
-    { to: "/safetyroute", label: "Safe Routes", icon: "ri-map-line" },
+    { to: "/chatbot", label: "Chatbot", icon: "ri-robot-2-line" },
     { to: "/reports", label: "Reports", icon: "ri-alert-line" },
     { to: "/setting", label: "Settings", icon: "ri-settings-3-line" },
   ];
@@ -37,11 +37,10 @@ const Navbar = () => {
           ))}
 
           <button
-            onClick={() => navigate("/signin")}
             className="py-2 px-8 border-2 border-black rounded-[10px] hover:bg-black hover:text-white transition"
           >
-            <i className="ri-login-circle-line mr-2"></i>
-            Sign in
+            <i className="ri-logout-circle-r-line"></i>
+            Logout
           </button>
         </div>
 
