@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const deviceSchema = new mongoose.Schema({
   //  bug: field name inconsistent + ref mismatch
-  policeid: {
+  policeStationId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "PoliceStation",
     required: true,

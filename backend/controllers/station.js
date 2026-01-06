@@ -37,7 +37,7 @@ export const registerPoliceDevice = async (req, res) => {
 
     //  bug: field name mismatch (policeid vs policeId)
     const device = await Device.create({
-      policeid: police._id, // store ObjectId, not string policeId
+      policeStationId: police._id, // store ObjectId, not string policeId
       deviceId: DeviceId,
       verificationCode,
       verificationCodeExpiry,

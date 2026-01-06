@@ -4,6 +4,8 @@ import {
   addFriends,
   scoreCalculator,
   report,
+  editProfile,
+  addFriendsByPhone,
 } from "../controllers/user.js";
 // bug: decodeToken was used but never imported
 import { decodeToken } from "../middleware/auth.js";

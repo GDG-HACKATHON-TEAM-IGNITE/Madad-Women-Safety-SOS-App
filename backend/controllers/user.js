@@ -325,7 +325,7 @@ export const addFriendsByPhone = async (req, res) => {
     });
   }
 };
-// export const editProfile = async (req, res) => {
+export const editProfile = async (req, res) => {
   try {
     const { uid } = req.user;
 
@@ -378,3 +378,4 @@ export const addFriendsByPhone = async (req, res) => {
     });
   }
 
+}
