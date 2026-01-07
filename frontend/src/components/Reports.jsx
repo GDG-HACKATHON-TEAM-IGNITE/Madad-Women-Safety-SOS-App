@@ -34,12 +34,42 @@ const Reports = () => {
   /* ================= DATA ================= */
 
   const incidentTypes = [
-    { id: 1, title: "Harassment", description: "Verbal, Physical", icon: "ri-user-voice-line" },
-    { id: 2, title: "Theft", description: "Robbery, Theft", icon: "ri-handbag-line" },
-    { id: 3, title: "Assault", description: "Physical harm", icon: "ri-alarm-warning-line" },
-    { id: 4, title: "Stalking", description: "Being followed", icon: "ri-eye-line" },
-    { id: 5, title: "Poor Lighting", description: "Dark areas", icon: "ri-lightbulb-flash-line" },
-    { id: 6, title: "Other", description: "Other issue", icon: "ri-more-2-line" },
+    {
+      id: 1,
+      title: "Harassment",
+      description: "Verbal, Physical",
+      icon: "ri-user-voice-line",
+    },
+    {
+      id: 2,
+      title: "Theft",
+      description: "Robbery, Theft",
+      icon: "ri-handbag-line",
+    },
+    {
+      id: 3,
+      title: "Assault",
+      description: "Physical harm",
+      icon: "ri-alarm-warning-line",
+    },
+    {
+      id: 4,
+      title: "Stalking",
+      description: "Being followed",
+      icon: "ri-eye-line",
+    },
+    {
+      id: 5,
+      title: "Poor Lighting",
+      description: "Dark areas",
+      icon: "ri-lightbulb-flash-line",
+    },
+    {
+      id: 6,
+      title: "Other",
+      description: "Other issue",
+      icon: "ri-more-2-line",
+    },
   ];
 
   const riskLevels = [
@@ -75,7 +105,6 @@ const Reports = () => {
       { enableHighAccuracy: true }
     );
   }, []);
-
 
   /* ================= MAP MODAL ================= */
 
@@ -115,7 +144,6 @@ const Reports = () => {
       mapRef.current = null;
     };
   }, [showMap]); // ✅ Only showMap
-
 
   /* ================= MANUAL SEARCH ================= */
 
@@ -160,11 +188,11 @@ const Reports = () => {
       return;
     }
 
-    await fetch("http://localhost:5000/api/report", {
+    await fetch("http://localhost:5000/api/user/report", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${authToken}`
+        Authorization: `Bearer ${authToken}`,
       },
       body: JSON.stringify({
         ...formData,
@@ -183,8 +211,7 @@ const Reports = () => {
     alert("Report submitted successfully");
   };
 
-  const handleChange = (k, v) =>
-    setFormData({ ...formData, [k]: v });
+  const handleChange = (k, v) => setFormData({ ...formData, [k]: v });
 
   /* ================= UI ================= */
 
@@ -192,7 +219,6 @@ const Reports = () => {
     <>
       <div className="min-h-screen bg-linear-to-br from-[#f4f8fc] to-[#eef3f9] px-6 py-12">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12">
-
           {/* LEFT */}
           <div>
             <h1 className="text-4xl lg:text-5xl font-bold mb-4 text-center lg:text-left">
@@ -200,15 +226,19 @@ const Reports = () => {
             </h1>
 
             <p className="text-gray-600 max-w-lg mb-8 text-center lg:text-left">
-              Help keep your community safe by reporting locations that feel unsafe
-              or suspicious.
+              Help keep your community safe by reporting locations that feel
+              unsafe or suspicious.
             </p>
 
             {/* LOCATION CARD */}
             <div className="mb-8 p-4 rounded-2xl bg-[#a7c7e7] flex flex-col lg:flex-row justify-between items-center">
               <div className="text-white">
-                <p className="text-xs opacity-80 text-center lg:text-left">REPORTING FROM</p>
-                <p className="font-semibold  text-center lg:text-left">{location.address}</p>
+                <p className="text-xs opacity-80 text-center lg:text-left">
+                  REPORTING FROM
+                </p>
+                <p className="font-semibold  text-center lg:text-left">
+                  {location.address}
+                </p>
               </div>
               <button
                 onClick={() => setShowMap(true)}
@@ -226,10 +256,11 @@ const Reports = () => {
                   key={item.id}
                   onClick={() => setSelectedIncident(item.id)}
                   className={`cursor-pointer p-4 rounded-2xl transition-all duration-200
-                ${selectedIncident === item.id
-                      ? "bg-[#a7c7e7] text-white shadow-sm"
-                      : "bg-white hover:shadow-sm"
-                    }`}
+                ${
+                  selectedIncident === item.id
+                    ? "bg-[#a7c7e7] text-white shadow-sm"
+                    : "bg-white hover:shadow-sm"
+                }`}
                 >
                   <div className="flex flex-col items-center text-center gap-2">
                     <div className="w-12 h-12 rounded-xl bg-[#f2f6fb] flex items-center justify-center text-xl text-[#a7c7e7]">
@@ -245,7 +276,9 @@ const Reports = () => {
 
           {/* RIGHT */}
           <div className="bg-white p-8 rounded-3xl shadow-sm">
-            <h2 className="text-xl font-semibold mb-6 text-center lg:text-left">Your Details</h2>
+            <h2 className="text-xl font-semibold mb-6 text-center lg:text-left">
+              Your Details
+            </h2>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
               <input
@@ -285,10 +318,11 @@ const Reports = () => {
                   key={risk.id}
                   onClick={() => setSelectedRisk(risk.id)}
                   className={`cursor-pointer p-3 rounded-xl text-center transition
-                ${selectedRisk === risk.id
-                      ? "bg-[#a7c7e7] text-white"
-                      : "bg-[#f2f6fb]"
-                    }`}
+                ${
+                  selectedRisk === risk.id
+                    ? "bg-[#a7c7e7] text-white"
+                    : "bg-[#f2f6fb]"
+                }`}
                 >
                   <p className="text-lg">{risk.icon}</p>
                   <p className="text-xs font-semibold">{risk.description}</p>
@@ -307,17 +341,18 @@ const Reports = () => {
               Your information is private and will never be shared publicly.
             </p>
 
-            <button onClick={handleSubmit} className="w-full py-3 rounded-xl bg-[#a7c7e7] text-white font-semibold hover:opacity-90 transition">
+            <button
+              onClick={handleSubmit}
+              className="w-full py-3 rounded-xl bg-[#a7c7e7] text-white font-semibold hover:opacity-90 transition"
+            >
               Submit Report
             </button>
           </div>
-
         </div>
 
         {/* MAP MODAL */}
         {showMap && (
           <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
-
             {/* CARD */}
             <div
               className="
@@ -333,9 +368,7 @@ const Reports = () => {
             >
               {/* HEADER */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-gray-400">
-                <h2 className="text-lg font-semibold">
-                  Choose Location
-                </h2>
+                <h2 className="text-lg font-semibold">Choose Location</h2>
 
                 <button
                   onClick={() => setShowMap(false)}
@@ -413,12 +446,9 @@ const Reports = () => {
             </div>
           </div>
         )}
-
-
       </div>
     </>
   );
 };
 
 export default Reports;
-

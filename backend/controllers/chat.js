@@ -63,6 +63,9 @@ const WOMEN_SAFETY_KEYWORDS = [
   "police",
   "cyber",
   "threat",
+  "indian",
+  "woman",
+  "india",
 ];
 
 //chack if it is related to women safety or not

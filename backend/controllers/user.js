@@ -60,6 +60,7 @@ export const userCreate = async (req, res) => {
 };
 
 import mongoose from "mongoose";
+import e from "express";
 
 export const addFriends = async (req, res) => {
   try {
@@ -69,54 +70,52 @@ export const addFriends = async (req, res) => {
     // 1️⃣ Validate input
     if (!Array.isArray(friends) || friends.length === 0) {
       return res.status(400).json({
-        message: "friends must be a non-empty array of Mongo IDs",
+        message: "friends must be a non-empty array of firebase UIDs",
       });
     }
 
-    // 2️⃣ Filter valid ObjectIds
-    const validObjectIds = friends.filter((id) =>
-      mongoose.Types.ObjectId.isValid(id)
-    );
+    // // 2️⃣ Filter valid ObjectIds
+    // const validObjectIds = friends.filter((id) =>
+    //   mongoose.Types.ObjectId.isValid(id)
+    // );
 
-    if (validObjectIds.length === 0) {
-      return res.status(400).json({
-        message: "No valid MongoDB ObjectIds provided",
-      });
-    }
+    // if (validObjectIds.length === 0) {
+    //   return res.status(400).json({
+    //     message: "No valid MongoDB ObjectIds provided",
+    //   });
+    // }
 
     // 3️⃣ Find current user
-    const user = await User.findOne({ uid });
-    if (!user) {
+    const currentUser = await User.findOne({ uid });
+    if (!currentUser) {
       return res.status(400).json({ message: "Invalid user" });
     }
 
-    // 4️⃣ Find existing users by _id
+    // 4️⃣ Find existing users by uid
     const existingUsers = await User.find({
-      _id: { $in: validObjectIds },
-    }).select("_id");
+      uid: { $in: friends },
+    }).select("_id uid");
 
     if (existingUsers.length === 0) {
       return res.status(404).json({
-        message: "No valid users found for provided IDs",
+        message: "No valid users found for provided UIDs",
       });
     }
-
-    const existingIds = new Set(existingUsers.map((u) => u._id.toString()));
+    const existingIds = existingUsers.map((u) => u._id.toString());
+    const existingUids = new Set(existingUsers.map((u) => u.uid));
 
     // 5️⃣ Add only existing IDs
-    await User.findOneAndUpdate(
+    await User.updateOne(
       { uid },
       {
         $addToSet: {
-          friends: { $each: [...existingIds] },
+          friends: { $each: existingIds },
         },
       }
     );
 
-    // 6️⃣ Detect invalid / non-existing IDs
-    const invalidIds = friends.filter(
-      (id) => !mongoose.Types.ObjectId.isValid(id) || !existingIds.has(id)
-    );
+    // 6️⃣ Detect invalid / non-existing UIDs
+    const invalidIds = friends.filter((fuid) => !foundUids.has(fuid));
 
     return res.status(200).json({
       message: "Friends added successfully",
@@ -147,32 +146,62 @@ export const report = async (req, res) => {
     if (!req.user || !req.user.uid) {
       return res.status(401).json({ msg: "Unauthorized" });
     }
+    console.log(req.body); //test
+    const {
+      whatHappened, // numeric (1..6)
+      firstName,
+      lastName,
+      riskVal,
+      lng,
+      lat,
+      phone,
+      description,
+      location,
+    } = req.body;
 
-    const { whatHappened, firstName, lastName, riskVal, lng, lat, phone } =
-      req.body;
-
-    //  bug: falsy check breaks for 0, use explicit check
-    if (!whatHappened || !riskVal || lng === undefined || lat === undefined) {
+    // Explicit validation (no falsy bugs)
+    if (
+      whatHappened === undefined ||
+      riskVal === undefined ||
+      lng === undefined ||
+      lat === undefined
+    ) {
       return res.status(400).json({ msg: "Missing required fields" });
     }
+    //  Map numeric whatHappened → string enum
+    const INCIDENT_MAP = {
+      1: "Harassment",
+      2: "Theft",
+      3: "Assault",
+      4: "Stalking",
+      5: "PoorLighting",
+      6: "Others",
+    };
 
-    let Risk;
-    if ((riskVal <= 6) || (riskVal >= 1)) {
-
-      Risk = riskVal
+    const incidentType = INCIDENT_MAP[whatHappened];
+    if (!incidentType) {
+      return res.status(400).json({ msg: "Invalid whatHappened value" });
     }
 
+    // Validate risk properly
+    if (riskVal < 1 || riskVal > 3) {
+      return res.status(400).json({ msg: "Invalid risk value" });
+    }
+
+    const address = location?.address || null;
+    //Create Report
     await Report.create({
-      whatHappened,
+      whatHappened: incidentType,
       firstName,
       lastName,
       phone,
-      risk: Risk,
+      risk: riskVal,
+      describe: description,
+      address,
 
-      // bug: GeoJSON structure + spelling
       location: {
         type: "Point",
-        coordinates: [lng, lat],
+        coordinates: [Number(lng), Number(lat)],
       },
     });
 
@@ -246,11 +275,6 @@ export const scoreCalculator = async (req, res) => {
   }
 };
 
-
-
-
-
-
 export const addFriendsByPhone = async (req, res) => {
   try {
     const { uid } = req.user;
@@ -298,9 +322,7 @@ export const addFriendsByPhone = async (req, res) => {
 
     // Detect phones not registered
     const existingPhones = new Set(matchedUsers.map((u) => u.phone));
-    const notRegisteredPhones = phones.filter(
-      (p) => !existingPhones.has(p)
-    );
+    const notRegisteredPhones = phones.filter((p) => !existingPhones.has(p));
 
     return res.status(200).json({
       message: "Friends added successfully",
@@ -317,11 +339,11 @@ export const editProfile = async (req, res) => {
   try {
     const { uid } = req.user;
 
-    const { name, photo, phone, provider } = req.body;
+    const { name, email, photo, phone, provider } = req.body;
 
     // Build allowed update object
     const updates = {};
-
+    if (email) updates.email = email;
     if (name) updates.name = name;
     if (photo) updates.photo = photo;
     if (phone) updates.phone = phone;
@@ -365,10 +387,7 @@ export const editProfile = async (req, res) => {
       message: error.message,
     });
   }
-
-
-
-}
+};
 
 export const getReports = async (req, res) => {
   try {

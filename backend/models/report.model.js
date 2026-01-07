@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 
 const reportSchema = new mongoose.Schema({
-  //  bug: `string` → `String`
   whatHappened: {
     type: String,
     enum: [
@@ -15,7 +14,6 @@ const reportSchema = new mongoose.Schema({
     required: true,
   },
 
-  //  bug: `string` → `String`
   firstName: { type: String },
   lastName: { type: String },
   phone: { type: Number },
@@ -25,15 +23,19 @@ const reportSchema = new mongoose.Schema({
     type: Number,
     required: true,
     min: 1,
-    max: 6,
+    max: 3,
   },
 
-  //  unused in controller but kept
   describe: {
     type: String,
+    trim: true,
   },
 
-  //  bug: GeoJSON structure totally wrong
+  address: {
+    type: String,
+    trim: true,
+  },
+
   location: {
     type: {
       type: String,
