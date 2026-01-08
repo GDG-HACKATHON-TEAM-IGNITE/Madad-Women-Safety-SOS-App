@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_BASE_URL } from "../config/api";
 import { z } from "zod";
 import { auth } from "../config/firebase-config";
 import { onAuthStateChanged } from "firebase/auth";
@@ -53,7 +54,7 @@ const Settings = () => {
       // 2. Fetch latest from Backend DB
       try {
         const token = await user.getIdToken();
-        const res = await fetch("http://localhost:5000/api/profile", {
+        const res = await fetch(`${API_BASE_URL}/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -97,7 +98,7 @@ const Settings = () => {
 
     setSaving(true);
 
-    await fetch("http://localhost:5000/api/user/profile", {
+    await fetch(`${API_BASE_URL}/user/profile`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -139,7 +140,7 @@ const Settings = () => {
 
   const saveContacts = async () => {
     console.log("Saving contacts payload:", JSON.stringify({ friends: contacts }));
-    await fetch("http://localhost:5000/api/user/addfriends", {
+    await fetch(`${API_BASE_URL}/user/addfriends`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

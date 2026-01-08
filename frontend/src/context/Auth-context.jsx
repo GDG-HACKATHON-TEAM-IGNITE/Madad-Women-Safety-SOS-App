@@ -4,6 +4,8 @@ import { auth } from "../config/firebase-config";
 import { getToken } from "firebase/messaging";
 import { messaging } from "../config/firebase-config";
 
+import { API_BASE_URL } from "../config/api";
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -46,7 +48,7 @@ export const AuthProvider = ({ children }) => {
             fcmToken: fcmToken || undefined
           };
 
-          const res = await fetch("http://localhost:5000/api/user/user", {
+          const res = await fetch(`${API_BASE_URL}/user/user`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

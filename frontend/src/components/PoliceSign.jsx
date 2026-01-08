@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { API_BASE_URL } from "../config/api";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,7 +31,7 @@ const PoliceSign = ({ onBack }) => {
     useEffect(() => {
         const checkVerification = async (id) => {
             try {
-                const res = await fetch("http://localhost:5000/api/police/checkDevice", {
+                const res = await fetch(`${API_BASE_URL}/police/checkDevice`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ deviceId: id }),
@@ -122,7 +123,7 @@ const PoliceSign = ({ onBack }) => {
             // Controller requires it.
             if (!fcmToken) fcmToken = "dummy_token_permission_denied";
 
-            const res = await fetch("http://localhost:5000/api/police/policeDeviceReg", {
+            const res = await fetch(`${API_BASE_URL}/police/policeDeviceReg`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -161,7 +162,7 @@ const PoliceSign = ({ onBack }) => {
                 }
             } catch (e) { }
 
-            const res = await fetch("http://localhost:5000/api/police/verifyDevice", {
+            const res = await fetch(`${API_BASE_URL}/police/verifyDevice`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { API_BASE_URL } from "../config/api";
 import { useAuth } from "../context/Auth-context";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -188,7 +189,7 @@ const Reports = () => {
       return;
     }
 
-    await fetch("http://localhost:5000/api/user/report", {
+    await fetch(`${API_BASE_URL}/user/report`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -256,11 +257,10 @@ const Reports = () => {
                   key={item.id}
                   onClick={() => setSelectedIncident(item.id)}
                   className={`cursor-pointer p-4 rounded-2xl transition-all duration-200
-                ${
-                  selectedIncident === item.id
-                    ? "bg-[#a7c7e7] text-white shadow-sm"
-                    : "bg-white hover:shadow-sm"
-                }`}
+                ${selectedIncident === item.id
+                      ? "bg-[#a7c7e7] text-white shadow-sm"
+                      : "bg-white hover:shadow-sm"
+                    }`}
                 >
                   <div className="flex flex-col items-center text-center gap-2">
                     <div className="w-12 h-12 rounded-xl bg-[#f2f6fb] flex items-center justify-center text-xl text-[#a7c7e7]">
@@ -318,11 +318,10 @@ const Reports = () => {
                   key={risk.id}
                   onClick={() => setSelectedRisk(risk.id)}
                   className={`cursor-pointer p-3 rounded-xl text-center transition
-                ${
-                  selectedRisk === risk.id
-                    ? "bg-[#a7c7e7] text-white"
-                    : "bg-[#f2f6fb]"
-                }`}
+                ${selectedRisk === risk.id
+                      ? "bg-[#a7c7e7] text-white"
+                      : "bg-[#f2f6fb]"
+                    }`}
                 >
                   <p className="text-lg">{risk.icon}</p>
                   <p className="text-xs font-semibold">{risk.description}</p>

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { API_BASE_URL } from "../config/api";
 import { socket } from "../sockets/sockets";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -139,7 +140,7 @@ const Safety = () => {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/user/reports");
+        const res = await fetch(`${API_BASE_URL}/user/reports`);
         const reports = await res.json();
 
         reports.forEach((report) => {
@@ -186,7 +187,7 @@ const Safety = () => {
         if (!user) return;
         const token = await user.getIdToken();
 
-        const res = await fetch(`http://localhost:5000/api/user/safeScore?lat=${latitude}&lng=${longitude}`, {
+        const res = await fetch(`${API_BASE_URL}/user/safeScore?lat=${latitude}&lng=${longitude}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
