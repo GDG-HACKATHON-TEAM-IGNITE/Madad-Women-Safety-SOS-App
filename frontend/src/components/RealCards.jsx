@@ -27,10 +27,10 @@ const RealCards = () => {
       icon: "https://i.pinimg.com/736x/ee/85/bf/ee85bfcb87fe10a10f3341077a22a613.jpg",
     },
     {
-      title: "Safe Route Guidance",
+      title: "SafeBot",
       description:
-        "Smart route suggestions that prioritize safer paths using historical data and community safety insights.",
-      icon: "https://i.pinimg.com/736x/f2/76/55/f27655cc3b62643a06b0caa08ff6e99b.jpg",
+        "You’re not alone. I can provide safety advice, quick actions, and helpful guidance whenever you need it.",
+      icon: "https://i.pinimg.com/736x/6d/dc/3f/6ddc3f9a79c891e0efd6042624e08f51.jpg",
     },
     {
       title: "Community Reports",
@@ -54,7 +54,7 @@ const RealCards = () => {
 
   return (
     <>
-      <h1 className="text-4xl sm:text-5xl lg:text-7xl text-center px-6 py-7 lg:py-14">
+      <h1 id='one' className="text-4xl sm:text-5xl lg:text-7xl text-center px-6 py-7 lg:py-14">
         How We Keep <span className="text-[#A7C7E7]">You Safe</span>
       </h1>
 

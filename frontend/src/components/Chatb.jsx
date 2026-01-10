@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { API_BASE_URL } from "../config/api";
 
-const API_URL = `${API_BASE_URL}/chat`; // adjust if needed
+const API_URL = `${import.meta.env.VITE_BACKEND_URL}/chat`; // adjust if needed
 
 const Chatb = () => {
   const bottomRef = useRef(null);

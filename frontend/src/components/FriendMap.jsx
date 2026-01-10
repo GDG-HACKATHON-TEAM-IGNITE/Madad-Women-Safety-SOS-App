@@ -85,11 +85,19 @@ export default function FriendMap() {
     }, []);
 
     return (
-        <div className="w-full h-screen flex justify-center">
-            <MapContainer
+        <>
+        <style>
+        {`
+      .leaflet-container {
+        z-index: 0;
+      }
+    `}
+      </style>
+        <div className="w-full h-[80%] flex justify-center bg-linear-to-br from-[#f4f8fc] to-[#eef3f9] pb-10">
+            <MapContainer id="map"
                 center={defaultCenter}
                 zoom={6}
-                className="w-[80%] h-[70vh] mt-10"
+                className="w-[80%] h-[90vh] mt-10"
             >
                 <TileLayer
                     attribution="© OpenStreetMap"
@@ -119,5 +127,6 @@ export default function FriendMap() {
                 ))}
             </MapContainer>
         </div>
+        </>
     );
 }

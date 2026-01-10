@@ -54,7 +54,7 @@ const Settings = () => {
       // 2. Fetch latest from Backend DB
       try {
         const token = await user.getIdToken();
-        const res = await fetch(`${API_BASE_URL}/profile`, {
+        const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}api/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -62,9 +62,9 @@ const Settings = () => {
 
         if (res.ok) {
           const data = await res.json();
-          if (data.name) name = data.name;
-          if (data.email) email = data.email;
-          if (data.uid) displayedUid = data.uid; // Prefer MongoDB ID from backend
+    name = data.name || "";
+    email = data.email || email;
+    displayedUid = data.uid || displayedUid; // Prefer MongoDB ID from backend
           console.log("Fetched profile from DB:", data);
         }
       } catch (err) {
@@ -72,9 +72,9 @@ const Settings = () => {
       }
 
       setProfile({
-        uid: user.uid, // ✅ FIREBASE UID
-        fullName: user.displayName || "",
-        email: user.email || "",
+        uid: displayedUid,
+        fullName: name,
+        email,
       });
     });
 
@@ -98,7 +98,7 @@ const Settings = () => {
 
     setSaving(true);
 
-    await fetch(`${API_BASE_URL}/user/profile`, {
+    await fetch(`${import.meta.env.VITE_BACKEND_URL}api/user/profile`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -140,7 +140,7 @@ const Settings = () => {
 
   const saveContacts = async () => {
     console.log("Saving contacts payload:", JSON.stringify({ friends: contacts }));
-    await fetch(`${API_BASE_URL}/user/addfriends`, {
+    await fetch(`${import.meta.env.VITE_BACKEND_URL}api/user/addfriends`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -196,16 +196,16 @@ const Settings = () => {
         {!editing ? (
           <button
             onClick={() => setEditing(true)}
-            className="px-6 py-3 rounded-xl bg-[#a7c7e7] text-white font-semibold"
+            className="w-full px-6 py-3 rounded-xl bg-[#a7c7e7] text-white font-semibold hover:opacity-70 hover:cursor-pointer"
           >
             Edit Profile
           </button>
         ) : (
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <button
               onClick={saveProfile}
               disabled={saving}
-              className="flex-1 px-6 py-3 rounded-xl bg-[#a7c7e7] text-white font-semibold"
+              className="flex-1 px-6 py-3 rounded-xl bg-[#a7c7e7] text-white font-semibold hover:opacity-70 hover:cursor-pointer"
             >
               Save
             </button>
@@ -219,7 +219,7 @@ const Settings = () => {
         )}
 
         {/* CONTACTS */}
-        <h2 className="mt-10 mb-4 text-[#a7c7e7] font-semibold">
+        <h2 id='two' className="mt-5 mb-4 text-[#a7c7e7] font-semibold">
           Emergency Contacts (UIDs)
         </h2>
 
@@ -229,11 +229,11 @@ const Settings = () => {
             className="flex justify-between items-center bg-[#f2f6fb] px-4 py-3 rounded-xl mb-2"
           >
             <span className="font-mono text-sm">{uid}</span>
-            <button onClick={() => removeUID(uid)}>✕</button>
+            <button onClick={() => removeUID(uid)} className="hover:text-[#a7c7e7]"><i class="ri-delete-bin-line"></i></button>
           </div>
         ))}
 
-        <div className="flex gap-3 mt-4">
+        <div className="flex gap-3 mt-4 flex-col lg:flex-row">
           <input
             value={newUID}
             onChange={(e) => setNewUID(e.target.value)}
@@ -242,7 +242,7 @@ const Settings = () => {
           />
           <button
             onClick={addUID}
-            className="px-6 py-3 rounded-xl bg-[#a7c7e7] text-white font-semibold"
+            className="px-6 py-3 rounded-xl bg-[#a7c7e7] text-white font-semibold hover:opacity-70 hover:cursor-pointer"
           >
             Add
           </button>
@@ -250,7 +250,7 @@ const Settings = () => {
 
         <button
           onClick={saveContacts}
-          className="mt-6 px-6 py-3 rounded-xl bg-[#a7c7e7] text-white font-semibold"
+          className="w-full mt-6 px-6 py-3 rounded-xl bg-[#a7c7e7] text-white font-semibold hover:opacity-70 hover:cursor-pointer"
         >
           Save Emergency Contacts
         </button>

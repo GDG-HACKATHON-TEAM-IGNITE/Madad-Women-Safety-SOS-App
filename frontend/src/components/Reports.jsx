@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { API_BASE_URL } from "../config/api";
 import { useAuth } from "../context/Auth-context";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -76,7 +75,7 @@ const Reports = () => {
   const riskLevels = [
     { id: 1, description: "Minor concern", icon: "🟢" },
     { id: 2, description: "Moderate risk", icon: "🟡" },
-    { id: 3, description: "Immediate danger", icon: "🔴" },
+    { id: 3, description: "Danger zone", icon: "🔴" },
   ];
 
   /* ================= LOCATION ================= */
@@ -189,7 +188,7 @@ const Reports = () => {
       return;
     }
 
-    await fetch(`${API_BASE_URL}/user/report`, {
+    await fetch(`${import.meta.env.VITE_BACKEND_URL}/user/report`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -54,7 +54,7 @@ const footer = {
             <div>
               <h1 className='text-[18px] lg:text-[22px]'>{item}</h1>
               {footer[index + 1].map((itm,idx)=>(
-                <h3 key={idx} className='text-[13px] lg:text-[14px] p-1.75 pl-0 text-[#88b7e6] hover:cursor-pointer hover:scale-102 hover:font-semibold hover:underline hover:underline-offset-2'>{itm}</h3>
+                <h3 key={idx} className='text-[13px] lg:text-[14px] p-1.75 pl-0 text-[#88b7e6] hover:cursor-pointer hover:font-semibold hover:underline hover:underline-offset-2'>{itm}</h3>
               ))}
             </div>
           </div>
