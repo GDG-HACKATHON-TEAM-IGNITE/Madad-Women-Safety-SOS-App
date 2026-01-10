@@ -33,7 +33,7 @@ export const registerPoliceDevice = async (req, res) => {
     }
 
     const verificationCode = Math.floor(1000 + Math.random() * 9000);
-    const verificationCodeExpiry = new Date(Date.now() + 4 * 60 * 1000);
+    const verificationCodeExpiry = new Date(Date.now() + 270000);//30 sec extra
 
     // Use findOneAndUpdate to prevent duplicate entries for the same device
     const device = await Device.findOneAndUpdate(
@@ -47,7 +47,7 @@ export const registerPoliceDevice = async (req, res) => {
     );
 
     //without $ not valid in Node.js
-    await mail({
+     mail({
       html: `<p>${verificationCode} (valid for 4 minutes)</p>`,
       to: emailId,
     });
